@@ -1,48 +1,57 @@
 name: Update OVP.zip in Latest Release
-
 on:
   push:
     branches:
       - main
-
 jobs:
   update-release:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Create OVP.zip from current directory
-        run: zip -r OVP.zip .
-
+      
+      - name: Create OVP.zip
+        run: zip -r OVP.zip . -x "*.git*" "*.github*"
+      
       - name: Get latest release info
         id: get_release
-        uses: octokit/request-action@v2.x
-        with:
-          route: GET /repos/${{ github.repository }}/releases/latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Delete existing OVP.zip asset (if it exists)
         run: |
-          ASSET_ID=$(curl -s \
-            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/latest \
-            | jq '.assets[] | select(.name == "OVP.zip") | .id')
-
-          if [ -n "$ASSET_ID" ]; then
-            curl -X DELETE \
-              -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-              https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          
+          echo "$RESPONSE" > release.json
+          RELEASE_ID=$(echo "$RESPONSE" | jq -r '.id')
+          
+          if [ "$RELEASE_ID" = "null" ]; then
+            echo "No releases found"
+            exit 1
           fi
-
-      - name: Upload new OVP.zip to latest release
+          
+          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+      
+      - name: Delete old OVP.zip if exists
         run: |
-          RELEASE_ID=${{ steps.get_release.outputs.data | fromJson | json_extract('.id') }}
-
+          ASSET_ID=$(jq -r '.assets[] | select(.name == "OVP.zip") | .id' release.json)
+          if [ "$ASSET_ID" != "null" ] && [ -n "$ASSET_ID" ]; then
+            echo "Deleting existing OVP.zip asset (ID: $ASSET_ID)"
+            curl -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID
+          else
+            echo "No existing OVP.zip asset found"
+          fi
+      
+      - name: Upload new OVP.zip
+        run: |
+          echo "Uploading new OVP.zip to release ${{ env.RELEASE_ID }}"
           curl -X POST \
-            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/zip" \
+            -H "Accept: application/vnd.github.v3+json" \
             --data-binary @OVP.zip \
-            "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=OVP.zip"
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets?name=OVP.zip&label=OVP.zip"
