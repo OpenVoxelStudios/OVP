@@ -1,0 +1,48 @@
+name: Update OVP.zip in Latest Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Create OVP.zip from current directory
+        run: zip -r OVP.zip .
+
+      - name: Get latest release info
+        id: get_release
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/releases/latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Delete existing OVP.zip asset (if it exists)
+        run: |
+          ASSET_ID=$(curl -s \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq '.assets[] | select(.name == "OVP.zip") | .id')
+
+          if [ -n "$ASSET_ID" ]; then
+            curl -X DELETE \
+              -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID
+          fi
+
+      - name: Upload new OVP.zip to latest release
+        run: |
+          RELEASE_ID=${{ steps.get_release.outputs.data | fromJson | json_extract('.id') }}
+
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @OVP.zip \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=OVP.zip"
