@@ -7,8 +7,8 @@
             {"text": "The Resource Pack™", "color": "aqua"}
         ],
         "supported_formats": {
-            "max_inclusive": 55,
-            "min_inclusive": 42
+            "max_inclusive": 99,
+            "min_inclusive": 1
         }
     },
     "overlays": {
