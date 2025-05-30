@@ -81,4 +81,4 @@ jobs:
             -H "Content-Type: text/plain" \
             -H "Accept: application/vnd.github.v3+json" \
             --data-binary @OVP.zip.sha256 \
-            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets?name=OVP.zip.sha256&label=SHA256%20Checksum"
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets?name=OVP.zip.sha256&label=OVP.zip.sha256"
