@@ -17,7 +17,7 @@ jobs:
       
       - name: Generate SHA256 checksum
         run: |
-          sha256sum OVP.zip > OVP.zip.sha256
+          sha256sum OVP.zip | cut -d' ' -f1 > OVP.zip.sha256
           echo "SHA256 checksum:"
           cat OVP.zip.sha256
       
