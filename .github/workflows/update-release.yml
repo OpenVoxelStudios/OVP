@@ -15,6 +15,12 @@ jobs:
       - name: Create OVP.zip
         run: zip -r OVP.zip . -x "*.git*" "*.github*"
       
+      - name: Generate SHA256 checksum
+        run: |
+          sha256sum OVP.zip | cut -d' ' -f1 > OVP.zip.sha256
+          echo "SHA256 checksum:"
+          cat OVP.zip.sha256
+      
       - name: Get latest release info
         id: get_release
         run: |
@@ -33,8 +39,9 @@ jobs:
           
           echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
       
-      - name: Delete old OVP.zip if exists
+      - name: Delete old assets if they exist
         run: |
+          # Delete OVP.zip if it exists
           ASSET_ID=$(jq -r '.assets[] | select(.name == "OVP.zip") | .id' release.json)
           if [ "$ASSET_ID" != "null" ] && [ -n "$ASSET_ID" ]; then
             echo "Deleting existing OVP.zip asset (ID: $ASSET_ID)"
@@ -45,8 +52,20 @@ jobs:
           else
             echo "No existing OVP.zip asset found"
           fi
+          
+          # Delete OVP.zip.sha256 if it exists
+          CHECKSUM_ASSET_ID=$(jq -r '.assets[] | select(.name == "OVP.zip.sha256") | .id' release.json)
+          if [ "$CHECKSUM_ASSET_ID" != "null" ] && [ -n "$CHECKSUM_ASSET_ID" ]; then
+            echo "Deleting existing OVP.zip.sha256 asset (ID: $CHECKSUM_ASSET_ID)"
+            curl -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/releases/assets/$CHECKSUM_ASSET_ID
+          else
+            echo "No existing OVP.zip.sha256 asset found"
+          fi
       
-      - name: Upload new OVP.zip
+      - name: Upload new assets
         run: |
           echo "Uploading new OVP.zip to release ${{ env.RELEASE_ID }}"
           curl -X POST \
@@ -55,3 +74,11 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             --data-binary @OVP.zip \
             "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets?name=OVP.zip&label=OVP.zip"
+          
+          echo "Uploading SHA256 checksum file"
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: text/plain" \
+            -H "Accept: application/vnd.github.v3+json" \
+            --data-binary @OVP.zip.sha256 \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets?name=OVP.zip.sha256&label=OVP.zip.sha256"
