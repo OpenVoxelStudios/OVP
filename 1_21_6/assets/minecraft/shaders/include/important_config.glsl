@@ -1,1 +1,0 @@
-vec2 SCREENSIZE = vec2(2880.0,1800.0);

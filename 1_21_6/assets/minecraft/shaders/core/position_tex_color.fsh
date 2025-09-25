@@ -5,7 +5,7 @@
 #moj_import <minecraft:dynamictransforms.glsl>
 
 #moj_import <minecraft:draw_logo.glsl>
-#moj_import <minecraft:important_config.glsl>
+
 #moj_import <minecraft:globals.glsl>
 
 #define DEBUG
