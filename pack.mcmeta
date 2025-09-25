@@ -1,21 +1,45 @@
 {
-    "pack": {
-        "pack_format": 55,
-        "description": [
-            {"text": "OpenVoxel Studios", "color": "gold", "bold": true},
-            {"text": " - ", "color": "white"},
-            {"text": "The Resource Pack™", "color": "aqua"}
-        ],
-        "supported_formats": {
-            "max_inclusive": 99,
-            "min_inclusive": 1
-        }
-    },
-    "overlays": {
+	"pack": {
+		"pack_format": 55,
+		"description": [
+			{
+				"text": "OpenVoxel Studios",
+				"color": "gold",
+				"bold": true
+			},
+			{
+				"text": " - ",
+				"color": "white"
+			},
+			{
+				"text": "The Resource Pack™",
+				"color": "aqua"
+			}
+		],
+		"supported_formats": {
+			"max_inclusive": 99,
+			"min_inclusive": 1
+		}
+	},
+	"overlays": {
 		"entries": [
+			{
+				"directory": "1_21_4",
+				"formats": {
+					"max_inclusive": 46,
+					"min_inclusive": 42
+				}
+			},
 			{
 				"directory": "1_21_5",
 				"formats": 55
+			},
+			{
+				"directory": "1_21_6",
+				"formats": {
+					"min_inclusive": 63,
+					"max_inclusive": 64
+				}
 			}
 		]
 	}
